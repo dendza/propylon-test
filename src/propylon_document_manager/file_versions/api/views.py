@@ -1,4 +1,5 @@
 import copy
+import hashlib
 from urllib.parse import urlparse, parse_qs
 
 from django.http import FileResponse
@@ -10,7 +11,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from .serializers import FileVersionSerializer
 from ..models import FileVersion
-from ...exceptions.ecxeptions import FileUrlQueryParamMissing, FileNotFoundException
+from ...exceptions.ecxeptions import FileNotFoundException, QueryParamMissing
 
 
 class FileVersionViewSet(CreateModelMixin, ListModelMixin, GenericViewSet):
@@ -20,6 +21,19 @@ class FileVersionViewSet(CreateModelMixin, ListModelMixin, GenericViewSet):
     def get_queryset(self):
         return FileVersion.objects.filter(user=self.request.user)
 
+    @staticmethod
+    def calculate_hash(file):
+        """
+            Calculate SHA-256 hash of the file contents.
+        """
+        if not file:
+            return None
+        hasher = hashlib.sha256()
+        file.seek(0)
+        for chunk in file.chunks():
+            hasher.update(chunk)
+        return hasher.hexdigest()
+
     def create(self, request, *args, **kwargs):
         data = copy.deepcopy(request.data)
         # we are only interested in the parsed_url as revision numbers will never be sent
@@ -27,7 +41,9 @@ class FileVersionViewSet(CreateModelMixin, ListModelMixin, GenericViewSet):
         parsed_url, query_params = self._parse_url(data['url'])
         queryset = self.get_queryset()
         file_version = queryset.filter(url=parsed_url).order_by('-version_number').all()
-        file_name = data.get('file').name
+
+        # file provided by client
+        file = data.get('file')
 
         # if we find that the file with the given URL already exist
         # create a new instance while bumping the file version
@@ -39,7 +55,8 @@ class FileVersionViewSet(CreateModelMixin, ListModelMixin, GenericViewSet):
         data.update({
             "user": request.user.id,
             "version_number": new_instance_version,
-            "file_name": file_name
+            "file_name": file.name,
+            "file_hash": self.calculate_hash(file)
         })
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
@@ -65,7 +82,7 @@ class FileVersionViewSet(CreateModelMixin, ListModelMixin, GenericViewSet):
         """
         queryset = self.get_queryset()
         if not (file_url := request.query_params.get('file_url')):
-            raise FileUrlQueryParamMissing("You must provide 'file_url' query param")
+            raise QueryParamMissing("You must provide 'file_url' query param")
         parsed_url, query_params = self._parse_url(file_url)
         file_version = None
         if not query_params:
@@ -85,4 +102,13 @@ class FileVersionViewSet(CreateModelMixin, ListModelMixin, GenericViewSet):
         response['Content-Disposition'] = f'attachment; filename="{file_version.file.name}"'
         return response
 
+    @action(detail=False, methods=['GET'])
+    def search_documents_by_hash(self, request, *args, **kwargs):
+        """
+            Retrieve all documents for a user that match the given content hash
+        """
+        queryset = self.get_queryset()
+        if not (file_hash := request.query_params.get('file_hash')):
+            raise QueryParamMissing("You must provide 'file_hash' query param")
 
+        return Response(self.get_serializer_class()(instance=queryset.filter(file_hash=file_hash), many=True).data)

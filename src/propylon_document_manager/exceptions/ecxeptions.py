@@ -13,7 +13,7 @@ class BadRequestException(APIException):
         super(BadRequestException, self).__init__()
 
 
-class FileUrlQueryParamMissing(BadRequestException):
+class QueryParamMissing(BadRequestException):
     pass
 
 

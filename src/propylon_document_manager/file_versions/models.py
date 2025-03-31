@@ -9,7 +9,8 @@ class FileVersion(models.Model):
     file = models.FileField(upload_to="files/", null=True, blank=True)
     url = models.CharField(max_length=512, db_index=True)
     user = models.ForeignKey(User, null=False, blank=False, on_delete=models.CASCADE)
-    file_name = models.CharField(max_length=512, null=True, blank=True)
+    file_name = models.CharField(max_length=512)
+    file_hash = models.CharField(max_length=64, db_index=True)
 
     class Meta:
         unique_together = ('url', 'version_number')
