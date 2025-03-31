@@ -27,6 +27,7 @@ class FileVersionViewSet(CreateModelMixin, ListModelMixin, GenericViewSet):
         parsed_url, query_params = self._parse_url(data['url'])
         queryset = self.get_queryset()
         file_version = queryset.filter(url=parsed_url).order_by('-version_number').all()
+        file_name = data.get('file').name
 
         # if we find that the file with the given URL already exist
         # create a new instance while bumping the file version
@@ -37,7 +38,8 @@ class FileVersionViewSet(CreateModelMixin, ListModelMixin, GenericViewSet):
 
         data.update({
             "user": request.user.id,
-            "version_number": new_instance_version
+            "version_number": new_instance_version,
+            "file_name": file_name
         })
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
