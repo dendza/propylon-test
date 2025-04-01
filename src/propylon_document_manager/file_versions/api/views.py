@@ -1,24 +1,35 @@
 import copy
 from urllib.parse import urlparse, parse_qs
 
+from django.db import IntegrityError
 from django.http import FileResponse
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.mixins import ListModelMixin, CreateModelMixin
+from rest_framework.mixins import ListModelMixin, CreateModelMixin, RetrieveModelMixin
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from .serializers import FileVersionSerializer
-from ..models import FileVersion
+from ..models import FileVersion, ReadFileVersionPermission
 from ..utils import calculate_hash
-from ...exceptions.ecxeptions import FileNotFoundException, QueryParamMissing
+from ...accounts.models import User
+from ...exceptions.ecxeptions import FileNotFoundException, QueryParamMissing, URLAlreadyTaken, FileAlreadyShared, \
+    FileSharingException
+from django.db.models import Q
 
 
-class FileVersionViewSet(CreateModelMixin, ListModelMixin, GenericViewSet):
+class FileVersionViewSet(CreateModelMixin, ListModelMixin, RetrieveModelMixin, GenericViewSet):
 
     serializer_class = FileVersionSerializer
+    RETRIEVE_ACTIONS = ['get_file_by_url', 'search_documents_by_hash','retrieve', 'list']
 
     def get_queryset(self):
+        # since we just share the files with the read access we can return shared files on any retrieve action
+        # if we were also granting the write access to files we would check for such permissions gere and extend
+        # the returned queryset
+        if self.action in self.RETRIEVE_ACTIONS:
+            return FileVersion.objects.filter(
+                Q(user=self.request.user) | Q(shared_file_permissions__shared_with=self.request.user))
         return FileVersion.objects.filter(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
@@ -26,6 +37,12 @@ class FileVersionViewSet(CreateModelMixin, ListModelMixin, GenericViewSet):
         # we are only interested in the parsed_url as revision numbers will never be sent
         # during a creation of the new instance
         parsed_url, query_params = self._parse_url(data['url'])
+
+        # check if URL is already taken by some other user.
+        queryset = FileVersion.objects.filter(url=parsed_url).exclude(user=self.request.user)
+        if len(queryset) > 0:
+            raise URLAlreadyTaken('Document already exists on the provided URL')
+
         queryset = self.get_queryset()
         file_version = queryset.filter(url=parsed_url).order_by('-version_number').all()
 
@@ -99,3 +116,19 @@ class FileVersionViewSet(CreateModelMixin, ListModelMixin, GenericViewSet):
             raise QueryParamMissing("You must provide 'file_hash' query param")
 
         return Response(self.get_serializer_class()(instance=queryset.filter(file_hash=file_hash), many=True).data)
+
+    @action(detail=True, methods=['POST'])
+    def share_file(self, request, *args, **kwargs):
+        file_version = self.get_object()
+        share_with = User.objects.get(id=request.data.get('share_with_user_id'))
+        if share_with == request.user:
+            raise FileSharingException("Can't share file with yourself")
+        try:
+            ReadFileVersionPermission.objects.create(
+                file_version=file_version,
+                shared_with=share_with
+            )
+        except IntegrityError:
+            raise FileAlreadyShared("You already shared this file with this user")
+
+        return Response("File shared successfully", status=status.HTTP_200_OK)

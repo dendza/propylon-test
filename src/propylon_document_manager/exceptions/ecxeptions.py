@@ -19,3 +19,16 @@ class QueryParamMissing(BadRequestException):
 
 class FileNotFoundException(BadRequestException):
     pass
+
+
+class URLAlreadyTaken(BadRequestException):
+    pass
+
+class FileAlreadyShared(BadRequestException):
+    pass
+
+class NoWritePermission(BadRequestException):
+    pass
+
+class FileSharingException(BadRequestException):
+    pass
