@@ -1,5 +1,4 @@
 import copy
-import hashlib
 from urllib.parse import urlparse, parse_qs
 
 from django.http import FileResponse
@@ -11,6 +10,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from .serializers import FileVersionSerializer
 from ..models import FileVersion
+from ..utils import calculate_hash
 from ...exceptions.ecxeptions import FileNotFoundException, QueryParamMissing
 
 
@@ -20,19 +20,6 @@ class FileVersionViewSet(CreateModelMixin, ListModelMixin, GenericViewSet):
 
     def get_queryset(self):
         return FileVersion.objects.filter(user=self.request.user)
-
-    @staticmethod
-    def calculate_hash(file):
-        """
-            Calculate SHA-256 hash of the file contents.
-        """
-        if not file:
-            return None
-        hasher = hashlib.sha256()
-        file.seek(0)
-        for chunk in file.chunks():
-            hasher.update(chunk)
-        return hasher.hexdigest()
 
     def create(self, request, *args, **kwargs):
         data = copy.deepcopy(request.data)
@@ -56,7 +43,7 @@ class FileVersionViewSet(CreateModelMixin, ListModelMixin, GenericViewSet):
             "user": request.user.id,
             "version_number": new_instance_version,
             "file_name": file.name,
-            "file_hash": self.calculate_hash(file)
+            "file_hash": calculate_hash(file)
         })
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
