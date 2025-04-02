@@ -1,4 +1,11 @@
 import { useState, useEffect } from "react";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  CircularProgress
+} from "@mui/material";
 import { TextField, Button, Box, Container, List, ListItem, ListItemText, Typography, Alert } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from '../config/axiosInstance';
@@ -9,6 +16,11 @@ const FileUpload = () => {
   const [url, setUrl] = useState("");
   const [files, setFiles] = useState([]);
   const [errorMessage, setErrorMessage] = useState('');
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [currentFileId, setCurrentFileId] = useState(null);
+  const [email, setEmail] = useState('');
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareError, setShareError] = useState('');
   const { user } = useAuth();
   const currentUserId = user?.user_id;
 
@@ -41,7 +53,7 @@ const FileUpload = () => {
     formData.append("url", url);
 
     try {
-      const response = await axiosInstance.post("http://localhost:8000/api/file_versions/", formData, {
+      const response = await axiosInstance.post("/api/file_versions/", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -50,7 +62,6 @@ const FileUpload = () => {
       setErrorMessage('');
     } catch (error) {
       if (error.response && error.response.status === 400) {
-        console.log(error)
         setErrorMessage(error.response.data.detail || 'Invalid request format');
       } else {
         setErrorMessage('An unexpected error occurred');
@@ -79,7 +90,7 @@ const FileUpload = () => {
           <Button
             variant="outlined"
             component="label"
-            sx={{ 
+            sx={{
               flexGrow: 1,
               textAlign: 'left',
               justifyContent: 'flex-start',
@@ -94,9 +105,9 @@ const FileUpload = () => {
               hidden
             />
           </Button>
-          <Button 
-            variant="contained" 
-            color="primary" 
+          <Button
+            variant="contained"
+            color="primary"
             onClick={handleUpload}
             disabled={!file || !url}
           >
@@ -105,15 +116,15 @@ const FileUpload = () => {
         </Box>
         <Box>
         {errorMessage && (
-            <Alert 
-              severity="error" 
-              sx={{ 
+            <Alert
+              severity="error"
+              sx={{
                 width: '100%',
-                mb: 2, 
-                bgcolor: '#ef9a9a', 
-                color: 'white', 
-                borderColor: '#ef5350', 
-                '& .MuiAlert-icon': { color: 'white' } 
+                mb: 2,
+                bgcolor: '#ef9a9a',
+                color: 'white',
+                borderColor: '#ef5350',
+                '& .MuiAlert-icon': { color: 'white' }
               }}
             >
               {errorMessage}
@@ -131,7 +142,7 @@ const FileUpload = () => {
             mb: 3
           }}>
             {myFiles.map((file) => (
-              <ListItem 
+              <ListItem
                 key={file.id}
                 sx={{
                   '&:hover': {
@@ -139,24 +150,46 @@ const FileUpload = () => {
                   }
                 }}
               >
-                <ListItemText 
-                  primary={file.file_name} 
+                <ListItemText
+                  primary={file.file_name}
                   secondary={
                     <>
                       {file.url}
                       <br />
                       Revision: {file.version_number}
                     </>
-                  } 
+                  }
                 />
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={() => navigate(file.url, { state: { fileName: file.file_name } })}
-                  sx={{ ml: 2 }}
-                >
-                  Download
-                </Button>
+                  <Box display="flex" gap={1}>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => {
+                        const fileVersions = files.filter(f => f.url === file.url);
+                        const hasMultipleVersions = fileVersions.length > 1;
+                        const isLatestVersion = file.version_number === Math.max(...fileVersions.map(f => f.version_number));
+                        console.log(fileVersions)
+                        const downloadUrl = hasMultipleVersions && !isLatestVersion 
+                          ? `${file.url}?revision=${file.version_number}`
+                          : file.url;
+                        navigate(downloadUrl, { state: { fileName: file.file_name } });
+                      }}
+                    >
+                      Download
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={() => {
+                        setCurrentFileId(file.id);
+                        setShareDialogOpen(true);
+                        setShareError('');
+                      }}
+                      color="secondary"
+                    >
+                      Share
+                    </Button>
+                  </Box>
               </ListItem>
             ))}
           </List>
@@ -170,7 +203,7 @@ const FileUpload = () => {
             bgcolor: 'background.paper'
           }}>
             {sharedFiles.map((file) => (
-              <ListItem 
+              <ListItem
                 key={file.id}
                 sx={{
                   '&:hover': {
@@ -178,20 +211,28 @@ const FileUpload = () => {
                   }
                 }}
               >
-                <ListItemText 
-                  primary={file.file_name} 
+                <ListItemText
+                  primary={file.file_name}
                   secondary={
                     <>
                       {file.url}
                       <br />
                       Revision: {file.version_number}
                     </>
-                  } 
+                  }
                 />
                 <Button
                   variant="outlined"
                   size="small"
-                  onClick={() => navigate(file.url, { state: { fileName: file.file_name } })}
+                  onClick={() => {
+                    const fileVersions = files.filter(f => f.url === file.url);
+                    const hasMultipleVersions = fileVersions.length > 1;
+                    const isLatestVersion = file.version_number === Math.max(...fileVersions.map(f => f.version_number));
+                    const downloadUrl = hasMultipleVersions && !isLatestVersion 
+                      ? `${file.url}?revision=${file.version_number}`
+                      : file.url;
+                    navigate(downloadUrl, { state: { fileName: file.file_name } });
+                  }}
                   sx={{ ml: 2 }}
                 >
                   Download
@@ -200,6 +241,57 @@ const FileUpload = () => {
             ))}
           </List>
         </Box>
+
+        <Dialog open={shareDialogOpen} onClose={() => setShareDialogOpen(false)}>
+          <DialogTitle>Share File</DialogTitle>
+          <DialogContent>
+            <TextField
+              autoFocus
+              margin="dense"
+              label="User Email"
+              type="email"
+              fullWidth
+              variant="standard"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            {shareError && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {shareError}
+              </Alert>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => {
+              setShareDialogOpen(false);
+              setEmail('');
+            }}>Cancel</Button>
+            <Button
+              onClick={async () => {
+                if (!email) {
+                  setShareError('Please enter an email');
+                  return;
+                }
+
+                setShareLoading(true);
+                try {
+                  await axiosInstance.post(`/api/file_versions/${currentFileId}/share_file/`, {
+                    user_email: email
+                  });
+                  setShareDialogOpen(false);
+                  setEmail('');
+                } catch (err) {
+                  setShareError(err.response?.data?.message || 'Failed to share file');
+                } finally {
+                  setShareLoading(false);
+                }
+              }}
+              disabled={shareLoading}
+            >
+              {shareLoading ? <CircularProgress size={24} /> : 'Share'}
+            </Button>
+          </DialogActions>
+        </Dialog>
       </Box>
     </Container>
   );

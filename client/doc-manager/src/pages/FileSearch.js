@@ -18,6 +18,7 @@ const FileSearch = () => {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [searchCount, setSearchCount] = useState(0);
   const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
@@ -56,6 +57,7 @@ const FileSearch = () => {
 
     setLoading(true);
     setError('');
+    setSearchCount(searchCount + 1)
 
     try {
       const hash = await generateHash(file);
@@ -64,15 +66,21 @@ const FileSearch = () => {
       });
       setResults(response.data);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to search files');
-      console.error("Search error:", err);
+      setError(err.response?.data?.detail || 'Failed to search files');
     } finally {
       setLoading(false);
     }
   };
 
-  const downloadFile = (url, fileName) => {
-    navigate(url, { state: { fileName } });
+  const downloadFile = (file) => {
+    const fileVersions = results.filter(f => f.url === file.url);
+    const hasMultipleVersions = fileVersions.length > 1;
+    const isLatestVersion = file.version_number === Math.max(...fileVersions.map(f => f.version_number));
+    console.log(fileVersions)
+    const downloadUrl = hasMultipleVersions && !isLatestVersion 
+      ? `${file.url}?revision=${file.version_number}`
+      : file.url;
+    navigate(downloadUrl, { state: { fileName: file.file_name } });
   };
 
   return (
@@ -151,7 +159,7 @@ const FileSearch = () => {
                   <Button
                     variant="outlined"
                     size="small"
-                    onClick={() => downloadFile(file.url, file.file_name)}
+                    onClick={() => downloadFile(file)}
                     sx={{ ml: 2 }}
                   >
                     Download
@@ -162,7 +170,7 @@ const FileSearch = () => {
           </Box>
         )}
 
-        {results.length === 0 && !loading && !error && (
+        {results.length === 0 && searchCount > 0 && !loading && !error && (
           <Typography variant="body1" sx={{ mt: 2 }}>
             No files found matching your search
           </Typography>

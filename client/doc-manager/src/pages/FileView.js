@@ -5,7 +5,8 @@ import axiosInstance from "../config/axiosInstance";
 
 const FileView = () => {
   const location = useLocation();
-  const fileUrl = location.pathname; // Retain the leading slash
+  const fileUrl = location.pathname + location.search;
+  const { fileName } = location.state || {};
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [downloadCompleted, setDownloadCompleted] = useState(false);
@@ -19,15 +20,15 @@ const FileView = () => {
     const fetchFile = async () => {
       let link = null;
       try {
-        const response = await axiosInstance.get('http://localhost:8000/api/file_versions/get_file_by_url', {
+        const response = await axiosInstance.get('/api/file_versions/get_file_by_url', {
           params: { file_url: fileUrl },
           responseType: 'blob',
         });
-
+        
         const contentDisposition = response.headers['content-disposition'];
         const filename = contentDisposition
           ? contentDisposition.split('filename=')[1].replace(/"/g, '')
-          : 'downloaded_file';
+          : fileName || 'downloaded_file';
 
         link = document.createElement('a');
         link.href = URL.createObjectURL(response.data);
@@ -49,7 +50,7 @@ const FileView = () => {
     };
 
     fetchFile();
-  }, [fileUrl]);
+  }, [fileUrl, fileName]);
 
   const handleBackToFileUpload = () => {
     navigate("/file-upload");
@@ -62,7 +63,7 @@ const FileView = () => {
       {!loading && !error && downloadCompleted && (
         <Box>
           <Typography variant="h6" gutterBottom>
-            When you are done with file download you can go back to MyFiles overview
+            Once you are done with file download you can go back to MyFiles overview
           </Typography>
           <Button variant="contained" color="primary" onClick={handleBackToFileUpload}>
             Go back
