@@ -14,7 +14,7 @@ from ..models import FileVersion, ReadFileVersionPermission
 from ..utils import calculate_hash
 from ...accounts.models import User
 from ...exceptions.ecxeptions import FileNotFoundException, QueryParamMissing, URLAlreadyTaken, FileAlreadyShared, \
-    FileSharingException
+    FileSharingException, UnknownUser
 from django.db.models import Q
 
 
@@ -120,7 +120,10 @@ class FileVersionViewSet(CreateModelMixin, ListModelMixin, RetrieveModelMixin, G
     @action(detail=True, methods=['POST'])
     def share_file(self, request, *args, **kwargs):
         file_version = self.get_object()
-        share_with = User.objects.get(id=request.data.get('share_with_user_id'))
+        try:
+            share_with = User.objects.get(email=request.data.get('user_email'))
+        except User.DoesNotExist:
+            raise UnknownUser(f"No user with email {request.data.get('user_email')}")
         if share_with == request.user:
             raise FileSharingException("Can't share file with yourself")
         try:

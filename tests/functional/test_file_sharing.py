@@ -28,7 +28,7 @@ def test_file_sharing(authorized_client_user_1, file_fixture_1, user_1, user_2, 
     assert len(response_data) == 0
 
     data = {
-        "share_with_user_id": user_2.id,
+        "user_email": user_2.email,
     }
     response = authorized_client_user_1.post(f'https://testserver/api/file_versions/{file_id}/share_file/', data=data)
     assert response.status_code == 200
@@ -67,7 +67,7 @@ def test_write_only_for_owners(authorized_client_user_1, file_fixture_1, user_1,
 
 
     data = {
-        "share_with_user_id": user_2.id,
+        "user_email": user_2.email,
     }
     response = authorized_client_user_1.post(f'https://testserver/api/file_versions/{file_id}/share_file/', data=data)
     assert response.status_code == 200
@@ -102,7 +102,7 @@ def test_sharing_only_the_files_that_user_owns(authorized_client_user_1, file_fi
     file_id = response_data[0]["id"]
 
     data = {
-        "share_with_user_id": user_2.id,
+        "user_email": user_2.email,
     }
     # user trying to share the file that it doesn't own with itself
     response = authorized_client_user_2.post(f'https://testserver/api/file_versions/{file_id}/share_file/', data=data)

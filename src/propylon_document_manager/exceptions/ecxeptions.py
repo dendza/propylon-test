@@ -32,3 +32,6 @@ class NoWritePermission(BadRequestException):
 
 class FileSharingException(BadRequestException):
     pass
+
+class UnknownUser(BadRequestException):
+    pass
