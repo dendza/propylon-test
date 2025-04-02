@@ -1,14 +1,13 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Dashboard from "./pages/Dashboard";
+import LandingPage from "./pages/LandingPage";
 
-// Protected Route Component
 const PrivateRoute = ({ children }) => {
   const { token } = useAuth();
   return token ? <Layout>{children}</Layout> : <Navigate to="/" />;
 };
 
-// App Component with Routing
 const App = () => {
   return (
     <AuthProvider>
