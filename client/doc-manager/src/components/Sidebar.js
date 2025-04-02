@@ -24,10 +24,7 @@ const Sidebar = () => {
     >
       <List>
         <ListItem button component={Link} to="/file-upload">
-          <ListItemText primary="File Upload" />
-        </ListItem>
-        <ListItem button component={Link} to="/file-fetch">
-          <ListItemText primary="File Fetch" />
+          <ListItemText primary="My files" />
         </ListItem>
         <ListItem button component={Link} to="/file-search">
           <ListItemText primary="File Search" />
