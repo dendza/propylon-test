@@ -1,18 +1,15 @@
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib import admin
 from django.urls import include, path
-from django.views import defaults as default_views
-from django.views.generic import TemplateView
-from rest_framework.authtoken.views import obtain_auth_token
+
+from propylon_document_manager.accounts.authentication import CustomAuthToken
+from propylon_document_manager.accounts.views import TokenVerifyView
 
 # API URLS
 urlpatterns = [
-    # API base url
     path("api/", include("propylon_document_manager.site.api_router")),
-    # DRF auth token
-    path("api-auth/", include("rest_framework.urls")),
-    path("auth-token/", obtain_auth_token),
+    path("auth-token/", CustomAuthToken.as_view()),
+    path('auth-token/verify/', TokenVerifyView.as_view(), name='token_verify'),
 ]
 
 if settings.DEBUG:
