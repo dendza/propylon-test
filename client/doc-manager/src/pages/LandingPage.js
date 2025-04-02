@@ -17,7 +17,7 @@ const LandingPage = () => {
 
     try {
       const response = await axios.post("http://localhost:8000/auth-token/", { "username":email, "password":password });
-      login(response.data.token); // Store only the token
+      login(response.data.token); // Store only the token, for now. Add the user info later when backend APi is updated
       navigate("/file-upload");
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
@@ -27,7 +27,7 @@ const LandingPage = () => {
   return (
     <Container maxWidth="xs">
       <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100vh">
-        <Typography variant="h4" gutterBottom>Welcome to Our App</Typography>
+        <Typography variant="h4" gutterBottom>Propylon document manager </Typography>
         <form onSubmit={handleLogin} style={{ width: "100%" }}>
           <TextField fullWidth label="Email" type="email" margin="normal" value={email} onChange={(e) => setEmail(e.target.value)} required />
           <TextField fullWidth label="Password" type="password" margin="normal" value={password} onChange={(e) => setPassword(e.target.value)} required />

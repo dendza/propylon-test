@@ -23,6 +23,15 @@ const Sidebar = () => {
       anchor="left"
     >
       <List>
+        <ListItem button component={Link} to="/file-upload">
+          <ListItemText primary="File Upload" />
+        </ListItem>
+        <ListItem button component={Link} to="/file-fetch">
+          <ListItemText primary="File Fetch" />
+        </ListItem>
+        <ListItem button component={Link} to="/file-search">
+          <ListItemText primary="File Search" />
+        </ListItem>
       </List>
       <Box p={2}>
         <Button fullWidth variant="contained" color="secondary" onClick={logout}>
