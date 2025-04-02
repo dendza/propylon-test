@@ -22,7 +22,7 @@ const App = () => {
           <Route path="/file-upload" element={<PrivateRoute><FileUpload /></PrivateRoute>} />
           <Route path="/file-fetch" element={<PrivateRoute><FileFetch /></PrivateRoute>} />
           <Route path="/file-search" element={<PrivateRoute><FileSearch /></PrivateRoute>} />
-          <Route path="/:fileUrl" element={<PrivateRoute><FileView /></PrivateRoute>} />
+          <Route path="/*" element={<PrivateRoute><FileView /></PrivateRoute>} />
         </Routes>
       </Router>
     </AuthProvider>
