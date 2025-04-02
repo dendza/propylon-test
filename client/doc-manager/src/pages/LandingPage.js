@@ -27,7 +27,7 @@ const LandingPage = () => {
   return (
     <Container maxWidth="xs">
       <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100vh">
-        <Typography variant="h4" gutterBottom>Propylon document manager </Typography>
+        <Typography variant="h4" gutterBottom textAlign="center">Propylon document manager </Typography>
         <form onSubmit={handleLogin} style={{ width: "100%" }}>
           <TextField fullWidth label="Email" type="email" margin="normal" value={email} onChange={(e) => setEmail(e.target.value)} required />
           <TextField fullWidth label="Password" type="password" margin="normal" value={password} onChange={(e) => setPassword(e.target.value)} required />

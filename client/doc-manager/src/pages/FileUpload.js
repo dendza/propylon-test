@@ -242,7 +242,7 @@ const FileUpload = () => {
           </List>
         </Box>
 
-        <Dialog open={shareDialogOpen} onClose={() => setShareDialogOpen(false)}>
+        <Dialog fullWidth={true} maxWidth='xs' open={shareDialogOpen} onClose={() => setShareDialogOpen(false)}>
           <DialogTitle>Share File</DialogTitle>
           <DialogContent>
             <TextField

@@ -5,6 +5,7 @@ import FileUpload from "./pages/FileUpload";
 import FileSearch from "./pages/FileSearch";
 import FileView from "./pages/FileView";
 import PrivateRoute from "./components/PrivateRoute";
+import FileDiffViewer from "./pages/FileDiff";
 
 
 const App = () => {
@@ -17,6 +18,7 @@ const App = () => {
           <Route element={<PrivateRoute />}>
             <Route path="/file-upload" element={<FileUpload />} />
             <Route path="/file-search" element={<FileSearch />} />
+            <Route path="/file-diff" element={<FileDiffViewer />} />
             <Route path="/*" element={<FileView />} />
           </Route>
           

@@ -87,7 +87,7 @@ const FileSearch = () => {
     <Container>
       <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" mt={5}>
         <Typography variant="h5" gutterBottom>
-          File Search
+          Search by content
         </Typography>
         
         <Box display="flex" gap={2} sx={{ width: '100%', mt: 2, mb: 2 }}>
