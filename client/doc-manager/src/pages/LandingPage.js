@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Container, TextField, Button, Typography, Box, Alert } from "@mui/material";
-import axios from "axios";
+import axiosInstance from "../config/axiosInstance";
 
 const LandingPage = () => {
   const { login } = useAuth();
@@ -16,8 +16,8 @@ const LandingPage = () => {
     setError(null);
 
     try {
-      const response = await axios.post("http://localhost:8000/auth-token/", { "username":email, "password":password });
-      login(response.data.token); // Store only the token, for now. Add the user info later when backend APi is updated
+      const response = await axiosInstance.post("/auth-token/", { "username":email, "password":password });
+      login(response.data.token, response.data.user_id);
       navigate("/file-upload");
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");

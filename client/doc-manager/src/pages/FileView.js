@@ -1,18 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Container, Typography, CircularProgress, Alert, Box } from '@mui/material';
-import axios from "axios";
+import axiosInstance from '../config/axiosInstance';
 
 const FileView = () => {
   const location = useLocation();
-  const fileUrl = location.pathname; // Retain the leading slash
+  const fileUrl = location.pathname;
+  const { fileName } = location.state || {};
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const hasDownloadedRef = useRef(false);
 
   useEffect(() => {
     const fetchFile = async () => {
+      if (hasDownloadedRef.current) return;
+      hasDownloadedRef.current = true;
+
       try {
-        const response = await axios.get('http://localhost:8000/api/file_versions/get_file_by_url', {
+        const response = await axiosInstance.get('/api/file_versions/get_file_by_url', {
           params: { file_url: fileUrl },
           responseType: 'blob',
         });
@@ -20,7 +25,7 @@ const FileView = () => {
         const contentDisposition = response.headers['content-disposition'];
         const filename = contentDisposition
           ? contentDisposition.split('filename=')[1].replace(/"/g, '')
-          : 'downloaded_file';
+          : fileName || 'downloaded_file';
 
         // Create a link element to trigger the download
         const link = document.createElement('a');
@@ -38,7 +43,7 @@ const FileView = () => {
     };
 
     fetchFile();
-  }, [fileUrl]);
+  }, [fileUrl, fileName]);
 
   return (
     <Container maxWidth="sm" sx={{ textAlign: 'center', mt: 5 }}>

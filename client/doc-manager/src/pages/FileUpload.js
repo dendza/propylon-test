@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { TextField, Button, Box, Container, List, ListItem, ListItemText } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from '../config/axiosInstance';
 
 const FileUpload = () => {
   const [file, setFile] = useState(null);
@@ -12,7 +12,7 @@ const FileUpload = () => {
   useEffect(() => {
     const fetchFiles = async () => {
       try {
-        const response = await axios.get("http://localhost:8000/api/file_versions/");
+        const response = await axiosInstance.get("/api/file_versions/");
         setFiles(response.data);
       } catch (error) {
         console.error("Failed to fetch files", error);
@@ -33,7 +33,7 @@ const FileUpload = () => {
     formData.append("url", url);
 
     try {
-      const response = await axios.post("http://localhost:8000/api/file_versions/", formData, {
+      const response = await axiosInstance.post("http://localhost:8000/api/file_versions/", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -65,7 +65,7 @@ const FileUpload = () => {
           <h3>My Files</h3>
           <List>
             {files.map((file) => (
-              <ListItem key={file.id} button onClick={() => navigate(file.url)}>
+              <ListItem key={file.id} button onClick={() => navigate(file.url, { state: { fileName: file.file_name } })}>
                 <ListItemText primary={file.file_name} secondary={file.url} />
               </ListItem>
             ))}

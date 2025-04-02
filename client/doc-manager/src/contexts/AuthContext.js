@@ -1,37 +1,37 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import axios from "axios";
+import axiosInstance from "../config/axiosInstance";
 
 const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem("user");
-    return savedUser ? JSON.parse(savedUser) : { name: "Test User" };
+    const savedUser = localStorage.getItem("user_id");
+    return savedUser ? { user_id: JSON.parse(savedUser) } : { user_id: null };
   });
   
   const [token, setToken] = useState(() => localStorage.getItem("token"));
 
   useEffect(() => {
     if (token) {
-      axios.defaults.headers.common["Authorization"] = `Token ${token}`;
+      axiosInstance.defaults.headers.common["Authorization"] = `Token ${token}`;
     }
   }, [token]);
   
-  const login = (authToken) => {
-    setUser({ name: "Dummy User" }); // Set a dummy user
+  const login = (authToken, userId) => {
+    setUser({ user_id: userId });
     setToken(authToken);
     localStorage.setItem("token", authToken);
-    localStorage.setItem("user", JSON.stringify({ name: "Test User" }));
-    axios.defaults.headers.common["Authorization"] = `Token ${authToken}`;
+    localStorage.setItem("user_id", JSON.stringify(userId));
+    axiosInstance.defaults.headers.common["Authorization"] = `Token ${authToken}`;
   };
   
   const logout = () => {
     setUser(null);
     setToken(null);
     localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    delete axios.defaults.headers.common["Authorization"];
+    localStorage.removeItem("user_id");
+    delete axiosInstance.defaults.headers.common["Authorization"];
   };
   
   return (
