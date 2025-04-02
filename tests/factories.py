@@ -27,6 +27,10 @@ class UserFactory(DjangoModelFactory):
         )
         self.set_password(self.raw_password)
 
+    @classmethod
+    def _after_postgeneration(cls, instance, create, results=None):
+        instance.save()
+
     class Meta:
         model = get_user_model()
         django_get_or_create = ["email"]
