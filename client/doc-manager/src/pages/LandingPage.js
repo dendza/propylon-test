@@ -21,6 +21,8 @@ const LandingPage = () => {
       navigate("/file-upload");
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
+      localStorage.removeItem("token");
+      localStorage.removeItem("user_id");
     }
   };
 

@@ -72,7 +72,7 @@ build: build-reqs
 	$(IN_ENV) pip install -e .
 
 plain-serve:
-	$(IN_ENV) django-admin runserver 0.0.0.0:8001
+	$(IN_ENV) django-admin runserver 0.0.0.0:8000
 
 serve: build makemigrations migrate plain-serve
 
@@ -85,7 +85,7 @@ makemigrations:
 migrate:
 	$(IN_ENV) django-admin migrate
 
-fixture: build makemigrations migrate plain-fixture
-
-plain-fixture:
-	$(IN_ENV) django-admin load_file_fixtures
+add-test-users:
+	$(IN_ENV) django-admin add_user --email=test_user_1@test.com --password=testtest --name "Test User 1"
+	$(IN_ENV) django-admin add_user --email=test_user_2@test.com --password=testtest --name "Test User 2"
+	$(IN_ENV) django-admin add_user --email=test_user_3@test.com --password=testtest --name "Test User 3"
