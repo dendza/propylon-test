@@ -8,7 +8,7 @@ The API project is a [Django/DRF](https://www.django-rest-framework.org/) projec
 
 To run the tests you can use`$ make test`
 
-### Populating hte DB
+### Populating the DB
 Once you have the development environment running, in order to use client app you will need to add users
 to the DB. You can do that by manually running the management command 
 
