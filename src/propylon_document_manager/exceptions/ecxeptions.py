@@ -24,14 +24,18 @@ class FileNotFoundException(BadRequestException):
 class URLAlreadyTaken(BadRequestException):
     pass
 
+
 class FileAlreadyShared(BadRequestException):
     pass
+
 
 class NoWritePermission(BadRequestException):
     pass
 
+
 class FileSharingException(BadRequestException):
     pass
+
 
 class UnknownUser(BadRequestException):
     pass

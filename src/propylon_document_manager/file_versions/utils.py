@@ -3,7 +3,7 @@ import hashlib
 
 def calculate_hash(file):
     """
-        Calculate SHA-256 hash of the file contents.
+    Calculate SHA-256 hash of the file contents.
     """
     if not file:
         return None

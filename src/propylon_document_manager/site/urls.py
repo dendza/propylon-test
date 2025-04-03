@@ -9,7 +9,7 @@ from propylon_document_manager.accounts.views import TokenVerifyView
 urlpatterns = [
     path("api/", include("propylon_document_manager.site.api_router")),
     path("auth-token/", CustomAuthToken.as_view()),
-    path('auth-token/verify/', TokenVerifyView.as_view(), name='token_verify'),
+    path("auth-token/verify/", TokenVerifyView.as_view(), name="token_verify"),
 ]
 
 if settings.DEBUG:
